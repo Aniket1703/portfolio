@@ -35,7 +35,7 @@ import csharpLogo from './assets/tech_logo/csharp.png';
 import netcore from './assets/tech_logo/NETcore.png';
 
 // Experience Section Logo's
-import vmedulife from './assets/company_logo/vmedulife.webp';
+import vmedulife from './assets/company_logo/VMEdulife.webp';
 import Amira from './assets/company_logo/Amira.png'
 
 // Education Section Logo's
