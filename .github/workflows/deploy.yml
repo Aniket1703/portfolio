@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Setup Node
@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 18
 
-      - name: Create .env for Vite
+      - name: Create .env file for Vite
         run: |
           echo "VITE_EMAILJS_SERVICE_ID=${{ secrets.ENV_VITE_EMAILJS_SERVICE_ID }}" >> .env
           echo "VITE_EMAILJS_TEMPLATE_ID=${{ secrets.ENV_VITE_EMAILJS_TEMPLATE_ID }}" >> .env
@@ -26,33 +26,25 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build Vite React app
+      - name: Build project
         run: npm run build
 
-      - name: Compress build files
-        run: zip -r build.zip dist
-
-      - name: Upload build.zip to EC2
+      - name: Copy build files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "build.zip"
-          target: "/var/www/"
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "dist/*"
+          target: "/var/www/portfolio"
 
-      - name: Unzip on EC2 & Restart Nginx
+      - name: Restart Nginx on EC2
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /var/www/
-            rm -rf portfolio/*   # clear old build
-            unzip -o build.zip
-            mv dist/* portfolio/
-            rm -rf dist build.zip
             sudo systemctl restart nginx
