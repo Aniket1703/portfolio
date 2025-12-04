@@ -2,7 +2,7 @@ name: Deploy React App to EC2
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
   deploy:
@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 18
 
-      - name: Create .env for Vite
+      - name: Create .env file
         run: |
           echo "VITE_EMAILJS_SERVICE_ID=${{ secrets.ENV_VITE_EMAILJS_SERVICE_ID }}" >> .env
           echo "VITE_EMAILJS_TEMPLATE_ID=${{ secrets.ENV_VITE_EMAILJS_TEMPLATE_ID }}" >> .env
@@ -29,30 +29,23 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Zip build folder
-        run: zip -r dist.zip dist
-
-      - name: Upload dist.zip to EC2
+      - name: Copy build files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          source: "dist.zip"
+          port: 22
+          source: "dist/"
           target: "/var/www/portfolio/"
+          strip_components: 1   # <<< IMPORTANT  FIX
 
-      - name: Unzip & Deploy on EC2
+      - name: Restart Nginx
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.SSH_PORT }}
+          port: 22
           script: |
-            cd /var/www/portfolio
-            sudo rm -rf ./*              # remove old build safely
-            sudo unzip dist.zip -d temp
-            sudo mv temp/dist/* ./
-            sudo rm -rf temp dist.zip
             sudo systemctl restart nginx
