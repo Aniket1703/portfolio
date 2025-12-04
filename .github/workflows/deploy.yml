@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 18
 
-      - name: Create .env file for Vite
+      - name: Create .env file
         run: |
           echo "VITE_EMAILJS_SERVICE_ID=${{ secrets.ENV_VITE_EMAILJS_SERVICE_ID }}" >> .env
           echo "VITE_EMAILJS_TEMPLATE_ID=${{ secrets.ENV_VITE_EMAILJS_TEMPLATE_ID }}" >> .env
@@ -34,17 +34,17 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
           source: "dist/*"
-          target: "/var/www/portfolio"
+          target: "/var/www/portfolio/"
 
-      - name: Restart Nginx on EC2
+      - name: Restart Nginx
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
           script: |
             sudo systemctl restart nginx
